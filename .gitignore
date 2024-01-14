@@ -1,0 +1,6 @@
+html/
+img/
+pkl/
+.vscode/
+__pycache__/
+*.txt
