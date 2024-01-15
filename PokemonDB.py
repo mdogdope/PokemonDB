@@ -66,10 +66,11 @@ baseURL = "https://pokemondb.net"
 
 
 
-
+## Parse Pokemon data.
 pokemonDirs = [f for f in os.listdir("html/pokemon") if os.path.isdir(f"html/pokemon/{f}")]
-pokemonDirs = ["abomasnow", "eevee", "ivysaur", "persian", "zygarde"] # For testing
-indexToRun = 0 # For testing
+pokemonDirs = ["abomasnow", "eevee", "ivysaur", "persian", "zygarde", "jolteon", "bulbasaur", "nincada"] # For testing
+indexToRun = [0,1,2] # For testing
 for id, dir in enumerate(pokemonDirs):
-	if(indexToRun == id) or (indexToRun == -1):
+	if(id in indexToRun) or (len(indexToRun) == 0):
+		# print(dir)
 		ParseData.parsePokemon(f"html/pokemon/{dir}/{dir}.html", f"pkl/pokemon/{dir}.pkl")

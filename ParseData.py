@@ -91,7 +91,6 @@ def parsePokemon(htmlFile:str, path:str = "data.pkl") -> None:
 	name = html.select("main")[0].select("h1")[0].text
 	data["name"] = name
 	
-	
 	# Get basic data table
 	subset = basic.select("table")[0].select("td")
 	
@@ -158,59 +157,63 @@ def parsePokemon(htmlFile:str, path:str = "data.pkl") -> None:
 	
 	
 	# Get evolution tree
-	evos = []
+	evosData = []
 	for tag in html.select("#dex-evolution")[0].next_siblings:
 		if(tag.has_attr("class")):
 			if("infocard-list-evo" in tag["class"]):
-				evos.append(tag)
+				evosData.append(tag)
 	
-	# TODO: Change this loop so it will extract data based on class name instead of div/span counts.
-	for evo in evos:
-		# Determine data structure
-		divCount = 0
-		spanCount = 0
-		for tag in evo:
-			if(tag.name == "div"):
-				divCount += 1
-			if(tag.name == "span"):
-				spanCount += 1
+	# Parse out all data into an easier form
+	tempEvoData = []
+	for evo in evosData:
+		isSplit = False
+		for subtag in evo.children:
+			if("infocard-evo-split" in subtag["class"]):
+				isSplit = True
 		
-		# If one to one evolution get data
-		if(divCount - spanCount == 1):
-			tempFrom = {}
-			tempTo = {}
-			pokemons = []
-			conditions = []
-			for tag in evo:
-				if(tag.has_attr("class")):
-					if("infocard-arrow" in tag["class"]):
-						con = tag.small.text.strip("()")
-						conditions.append(con)
-					elif("infocard" in tag["class"]):
-						pok = tag.small.text[1:]
-						pokemons.append(pok)
-			if(not data["national-number"] in pokemons):
-				continue
-			thisPokemonIndex = pokemons.index(data["national-number"])
-			for id, pokemon in enumerate(pokemons):
-				if(pokemon == data["national-number"]):
-					continue
-				if(id+1 == thisPokemonIndex):
-					tempFrom = {"national-number": pokemon, "condition": conditions[id]}
-				if(id-1 == thisPokemonIndex):
-					tempTo = {"national-number": pokemon, "condition": conditions[id-1]}
-			data["evo-from"] = tempFrom
-			data["evo-to"] = tempTo
-			break
+		if(isSplit):
+			# Code for split evos
+			base = evo.select(".infocard")[0].small.text[1:]
+			for subtag in evo.select(".infocard-evo-split")[0].children:
+				buff = []
+				buff.append(base)
+				for subsubtag in subtag.children:
+					if(not subsubtag.has_attr("class")):
+						# print(data["name"])
+						continue
+					if("infocard-arrow" in subsubtag["class"]):
+						buff.append(subsubtag.small.text.strip("()"))
+					else:
+						buff.append(subsubtag.small.text[1:])
+				tempEvoData.append(buff)
 		else:
-			# TODO: Add code for Pokemon like Eevee, where one Pokemon has many evos.
-			
+			# Code for linear evos
+			buff = []
+			for subtag in evo.children:
+				if("infocard-arrow" in subtag["class"]):
+					buff.append(subtag.small.text.strip("()"))
+				else:
+					buff.append(subtag.small.text[1:])
+			tempEvoData.append(buff)
 			pass
-	print(data)
+	
+	# Parse out data that only has to do with the current pokemon.
+	data["evo-from"] = []
+	data["evo-to"] = []
+	for tree in tempEvoData:
+		if(data["national-number"] in tree):
+			currLoc = tree.index(data["national-number"])
+			
+			if(currLoc >= 2):
+				data["evo-from"].append({"national-number": tree[currLoc - 2], "condition": tree[currLoc - 1]})
+			
+			if(currLoc + 3 < len(tree) and (len(tree)%2) == 0):
+				data["evo-to"].append({"national-number": tree[currLoc + 2] + " + " + tree[currLoc + 3], "condition": tree[currLoc + 1]})
+			elif(currLoc + 2 < len(tree)):
+				data["evo-to"].append({"national-number": tree[currLoc + 2], "condition": tree[currLoc + 1]})
 	
 	
 	# Get Pokedex entries
-	
 	if(html.select("#dex-flavor")[0].find_next().text != ""):
 		subset = html.select("#dex-flavor")[0].find_next("tbody").select("tr")
 		tempFlavor = {}
@@ -234,3 +237,4 @@ def parsePokemon(htmlFile:str, path:str = "data.pkl") -> None:
 	
 	
 	# Get moves
+	
