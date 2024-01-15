@@ -158,59 +158,59 @@ def parsePokemon(htmlFile:str, path:str = "data.pkl") -> None:
 	
 	
 	# Get evolution tree
-	evos = []
+	evosData = []
 	for tag in html.select("#dex-evolution")[0].next_siblings:
 		if(tag.has_attr("class")):
 			if("infocard-list-evo" in tag["class"]):
-				evos.append(tag)
+				evosData.append(tag)
 	
-	# TODO: Change this loop so it will extract data based on class name instead of div/span counts.
-	for evo in evos:
-		# Determine data structure
-		divCount = 0
-		spanCount = 0
-		for tag in evo:
-			if(tag.name == "div"):
-				divCount += 1
-			if(tag.name == "span"):
-				spanCount += 1
-		
-		# If one to one evolution get data
-		if(divCount - spanCount == 1):
-			tempFrom = {}
-			tempTo = {}
-			pokemons = []
-			conditions = []
-			for tag in evo:
-				if(tag.has_attr("class")):
-					if("infocard-arrow" in tag["class"]):
-						con = tag.small.text.strip("()")
-						conditions.append(con)
-					elif("infocard" in tag["class"]):
-						pok = tag.small.text[1:]
-						pokemons.append(pok)
-			if(not data["national-number"] in pokemons):
-				continue
-			thisPokemonIndex = pokemons.index(data["national-number"])
-			for id, pokemon in enumerate(pokemons):
-				if(pokemon == data["national-number"]):
+	data["evo-from"] = []
+	data["evo-to"] = []
+	for evo in evosData:
+		hasFoundCurrent = False
+		tempFrom = []
+		tempTo = []
+		buff = {"pokemon": None, "condition": None}
+		for child in evo.children:
+			if(["infocard"] == child["class"]):
+				pokeId = child.select("span")[1].small.text[1:]
+				if(pokeId == data["national-number"]):
+					hasFoundCurrent = True
 					continue
-				if(id+1 == thisPokemonIndex):
-					tempFrom = {"national-number": pokemon, "condition": conditions[id]}
-				if(id-1 == thisPokemonIndex):
-					tempTo = {"national-number": pokemon, "condition": conditions[id-1]}
-			data["evo-from"] = tempFrom
-			data["evo-to"] = tempTo
-			break
-		else:
-			# TODO: Add code for Pokemon like Eevee, where one Pokemon has many evos.
+				buff["pokemon"] = pokeId
+			elif("infocard-arrow" in child["class"]):
+				cond = child.select("small")[0].text.strip("()")
+				buff["condition"] = cond
+			elif("infocard-evo-split" in child["class"]):
+				for subchild in child.children:
+					for subtag in subchild.children:
+						if(["infocard"] == subtag["class"]):
+							pokeId = subtag.select("span")[1].small.text[1:]
+							if(pokeId == data["national-number"]):
+								hasFoundCurrent = True
+								continue
+							buff["pokemon"] = pokeId
+						elif("infocard-arrow" in subtag["class"]):
+							cond = subtag.select("small")[0].text.strip("()")
+							buff["condition"] = cond
+						
+						if((buff["pokemon"] != None) and (buff["condition"] != None)):
+							if(hasFoundCurrent):
+								tempTo.append(buff)
+							else:
+								tempFrom.append(buff)
+							buff = {"pokemon": None, "condition": None}
 			
-			pass
-	print(data)
+			if((buff["pokemon"] != None) and (buff["condition"] != None)):
+				if(hasFoundCurrent):
+					tempTo.append(buff)
+				else:
+					tempFrom.append(buff)
+				buff = {"pokemon": None, "condition": None}
+		print(tempFrom, tempTo)
 	
 	
 	# Get Pokedex entries
-	
 	if(html.select("#dex-flavor")[0].find_next().text != ""):
 		subset = html.select("#dex-flavor")[0].find_next("tbody").select("tr")
 		tempFlavor = {}
