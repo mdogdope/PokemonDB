@@ -91,7 +91,6 @@ def parsePokemon(htmlFile:str, path:str = "data.pkl") -> None:
 	name = html.select("main")[0].select("h1")[0].text
 	data["name"] = name
 	
-	
 	# Get basic data table
 	subset = basic.select("table")[0].select("td")
 	
@@ -164,50 +163,54 @@ def parsePokemon(htmlFile:str, path:str = "data.pkl") -> None:
 			if("infocard-list-evo" in tag["class"]):
 				evosData.append(tag)
 	
+	# Parse out all data into an easier form
+	tempEvoData = []
+	for evo in evosData:
+		isSplit = False
+		for subtag in evo.children:
+			if("infocard-evo-split" in subtag["class"]):
+				isSplit = True
+		
+		if(isSplit):
+			# Code for split evos
+			base = evo.select(".infocard")[0].small.text[1:]
+			for subtag in evo.select(".infocard-evo-split")[0].children:
+				buff = []
+				buff.append(base)
+				for subsubtag in subtag.children:
+					if(not subsubtag.has_attr("class")):
+						# print(data["name"])
+						continue
+					if("infocard-arrow" in subsubtag["class"]):
+						buff.append(subsubtag.small.text.strip("()"))
+					else:
+						buff.append(subsubtag.small.text[1:])
+				tempEvoData.append(buff)
+		else:
+			# Code for linear evos
+			buff = []
+			for subtag in evo.children:
+				if("infocard-arrow" in subtag["class"]):
+					buff.append(subtag.small.text.strip("()"))
+				else:
+					buff.append(subtag.small.text[1:])
+			tempEvoData.append(buff)
+			pass
+	
+	# Parse out data that only has to do with the current pokemon.
 	data["evo-from"] = []
 	data["evo-to"] = []
-	for evo in evosData:
-		hasFoundCurrent = False
-		tempFrom = []
-		tempTo = []
-		buff = {"pokemon": None, "condition": None}
-		for child in evo.children:
-			if(["infocard"] == child["class"]):
-				pokeId = child.select("span")[1].small.text[1:]
-				if(pokeId == data["national-number"]):
-					hasFoundCurrent = True
-					continue
-				buff["pokemon"] = pokeId
-			elif("infocard-arrow" in child["class"]):
-				cond = child.select("small")[0].text.strip("()")
-				buff["condition"] = cond
-			elif("infocard-evo-split" in child["class"]):
-				for subchild in child.children:
-					for subtag in subchild.children:
-						if(["infocard"] == subtag["class"]):
-							pokeId = subtag.select("span")[1].small.text[1:]
-							if(pokeId == data["national-number"]):
-								hasFoundCurrent = True
-								continue
-							buff["pokemon"] = pokeId
-						elif("infocard-arrow" in subtag["class"]):
-							cond = subtag.select("small")[0].text.strip("()")
-							buff["condition"] = cond
-						
-						if((buff["pokemon"] != None) and (buff["condition"] != None)):
-							if(hasFoundCurrent):
-								tempTo.append(buff)
-							else:
-								tempFrom.append(buff)
-							buff = {"pokemon": None, "condition": None}
+	for tree in tempEvoData:
+		if(data["national-number"] in tree):
+			currLoc = tree.index(data["national-number"])
 			
-			if((buff["pokemon"] != None) and (buff["condition"] != None)):
-				if(hasFoundCurrent):
-					tempTo.append(buff)
-				else:
-					tempFrom.append(buff)
-				buff = {"pokemon": None, "condition": None}
-		print(tempFrom, tempTo)
+			if(currLoc >= 2):
+				data["evo-from"].append({"national-number": tree[currLoc - 2], "condition": tree[currLoc - 1]})
+			
+			if(currLoc + 3 < len(tree) and (len(tree)%2) == 0):
+				data["evo-to"].append({"national-number": tree[currLoc + 2] + " + " + tree[currLoc + 3], "condition": tree[currLoc + 1]})
+			elif(currLoc + 2 < len(tree)):
+				data["evo-to"].append({"national-number": tree[currLoc + 2], "condition": tree[currLoc + 1]})
 	
 	
 	# Get Pokedex entries
@@ -234,3 +237,4 @@ def parsePokemon(htmlFile:str, path:str = "data.pkl") -> None:
 	
 	
 	# Get moves
+	
