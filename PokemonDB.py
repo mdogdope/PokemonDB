@@ -3,6 +3,7 @@ import os
 
 import GetHTML
 import ParseData
+import FormatData
 
 baseURL = "https://pokemondb.net"
 
@@ -66,11 +67,26 @@ baseURL = "https://pokemondb.net"
 
 
 
-## Parse Pokemon data.
-pokemonDirs = [f for f in os.listdir("html/pokemon") if os.path.isdir(f"html/pokemon/{f}")]
-pokemonDirs = ["abomasnow", "eevee", "ivysaur", "persian", "zygarde", "jolteon", "bulbasaur", "nincada"] # For testing
-indexToRun = [0,1,2] # For testing
-for id, dir in enumerate(pokemonDirs):
-	if(id in indexToRun) or (len(indexToRun) == 0):
-		# print(dir)
-		ParseData.parsePokemon(f"html/pokemon/{dir}/{dir}.html", f"pkl/pokemon/{dir}.pkl")
+
+
+
+# ## Parse Pokemon data.
+# pokemonDirs = [f for f in os.listdir("html/pokemon") if os.path.isdir(f"html/pokemon/{f}")]
+# # pokemonDirs = ["abomasnow", "eevee", "ivysaur", "persian", "zygarde", "jolteon", "bulbasaur", "nincada"] # For testing
+# indexToRun = []
+# for id, dir in enumerate(pokemonDirs):
+# 	if(id in indexToRun) or (len(indexToRun) == 0):
+# 		print(dir)
+# 		ParseData.parsePokemon(dir)
+
+
+# ## Combine Pokemon data.
+# if(os.path.exists("pkl/pokemon.pkl")):
+# 	os.remove("pkl/pokemon.pkl")
+# FormatData.CombinePokemon(pokemonDirs)
+
+
+
+
+
+## Parse Move data.

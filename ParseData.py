@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup as bs
 import pickle
 import os
+import re
 
 
 def _pathExist(path:str) -> bool:
@@ -71,12 +72,9 @@ def parseImgUrl(htmlFile:str) -> str:
 	return imgTag["src"]
 
 
-def parsePokemon(htmlFile:str, path:str = "data.pkl") -> None:
-	if(not path.endswith(".pkl")):
-		path += ".pkl"
-	
-	if(not htmlFile.endswith(".html")):
-		htmlFile += ".html"
+def parsePokemon(pokemon:str) -> None:
+	htmlFile = f"html/pokemon/{pokemon}/{pokemon}.html"
+	path =  f"pkl/pokemon/{pokemon}/{pokemon}.pkl"
 	
 	_pathExist(path)
 	
@@ -145,7 +143,6 @@ def parsePokemon(htmlFile:str, path:str = "data.pkl") -> None:
 		game = localNum[firstSpace+1:]
 		temp[game] = num
 	data["local-number"] = temp
-	
 	
 	# Get base stats 
 	temp = {}
@@ -235,6 +232,53 @@ def parsePokemon(htmlFile:str, path:str = "data.pkl") -> None:
 				tempLocation[gameName] = tag.td.text
 	data["location"] = tempLocation
 	
-	
+	data["moves"] = {}
 	# Get moves
-	
+	for gen in [f for f in os.listdir(f"html/pokemon/{pokemon}") if re.match("gen\dMoves.html", f) != None]:
+		htmlFile = f"html/pokemon/{pokemon}/{gen}"
+		with open(htmlFile, "r", encoding="utf-8") as f:
+			html = bs(f, "html.parser")
+			f.close()
+		
+		tempMoves = {}
+		
+		try:
+			if html.findAll(text="Moves learnt by level up") != []:
+				tempMoves["level-up-moves"] = []
+				for subtag in html.findAll(text="Moves learnt by level up")[0].find_next("tbody").children:
+					lvl = subtag.select(".cell-num")[0].text
+					name = subtag.select(".cell-name")[0].text
+					tempMoves["level-up-moves"].append({"move-name": name, "level": lvl})
+		except:
+			pass
+		
+		try:
+			if html.findAll(text="Egg moves") != []:
+				tempMoves["egg-moves"] = []
+				for subtag in html.findAll(text="Egg moves")[0].find_next("tbody").children:
+					name = subtag.select(".cell-name")[0].text
+					tempMoves["egg-moves"].append(name)
+		except:
+			pass
+		try:
+			if html.findAll(text="Moves learnt by HM") != []:
+				tempMoves["HM-moves"] = []
+				for subtag in html.findAll(text="Moves learnt by HM")[0].find_next("tbody").children:
+					name = subtag.select(".cell-name")[0].text
+					tempMoves["HM-moves"].append(name)
+		except:
+			pass
+		
+		try:
+			if html.findAll(text="Moves learnt by TM") != []:
+				tempMoves["TM-moves"] = []
+				for subtag in html.findAll(text="Moves learnt by TM")[0].find_next("tbody").children:
+					name = subtag.select(".cell-name")[0].text
+					tempMoves["TM-moves"].append(name)
+		except:
+			pass
+		
+		data["moves"][gen[:-10]] = tempMoves
+		
+		with open(path, "wb") as f:
+			pickle.dump(data, f)
