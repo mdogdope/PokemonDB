@@ -79,11 +79,11 @@ def parseImgUrl(htmlFile:str) -> str:
 	return imgTag["src"]
 
 
-def parsePokemon(pokemon:str, verbose:bool = False) -> None:
+def parsePokemon(pokemon:str, verbose:bool = False, force:bool = False) -> None:
 	htmlFile = f"html/pokemon/{pokemon}/{pokemon}.html"
 	path =  f"pkl/pokemon/{pokemon}/{pokemon}.pkl"
 	
-	if(_pathExist(path)):
+	if(_pathExist(path) or not force):
 		return
 	
 	if(verbose):
@@ -321,11 +321,11 @@ def parsePokemon(pokemon:str, verbose:bool = False) -> None:
 	pickle.dump(data, open(path, "wb"))
 	
 
-def parseMoves(move:str, verbose:bool = False) -> None:
+def parseMoves(move:str, verbose:bool = False, force:bool = False) -> None:
 	htmlFile = f"html/moves/{move}/{move}.html"
 	path =  f"pkl/moves/{move}/{move}.pkl"
 	
-	if(_pathExist(path)):
+	if(_pathExist(path) or not force):
 		return
 	
 	if(verbose):
@@ -427,7 +427,7 @@ def parseAbilities(ability:str, verbose:bool = False, force:bool = False) -> Non
 	htmlFile = f"html/abilities/{ability}/{ability}.html"
 	path =  f"pkl/abilities/{ability}/{ability}.pkl"
 	
-	if(_pathExist(path) and not force):
+	if(_pathExist(path) or not force):
 		return
 	
 	if(verbose):
@@ -477,11 +477,11 @@ def parseAbilities(ability:str, verbose:bool = False, force:bool = False) -> Non
 	pickle.dump(data, open(path, "wb"))
 
 
-def parseItems(item:str, verbose:bool = False) -> None:
+def parseItems(item:str, verbose:bool = False, force:bool = False) -> None:
 	htmlFile = f"html/items/{item}/{item}.html"
 	path =  f"pkl/items/{item}/{item}.pkl"
 	
-	if(_pathExist(path)):
+	if(_pathExist(path) or not force):
 		return
 	
 	if(verbose):
@@ -520,11 +520,11 @@ def parseItems(item:str, verbose:bool = False) -> None:
 	pickle.dump(data, open(path, "wb"))
 
 
-def parseKeyItems(keyitem:str, verbose:bool = False) -> None:
+def parseKeyItems(keyitem:str, verbose:bool = False, force:bool = False) -> None:
 	htmlFile = f"html/keyitems/{keyitem}/{keyitem}.html"
 	path =  f"pkl/keyitems/{keyitem}/{keyitem}.pkl"
 	
-	if(_pathExist(path)):
+	if(_pathExist(path) or not force):
 		return
 	
 	if(verbose):
