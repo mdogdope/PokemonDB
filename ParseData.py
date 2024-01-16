@@ -15,7 +15,7 @@ def _pathExist(path:str) -> bool:
 
 
 def _formatText(str:str) -> str:
-	return str.replace("\u00e9", "e").replace("\u2014", "-").replace("\u2019", "'").replace("\u00a3", "$").replace("\u200b", "")
+	return str.replace("\u00e9", "e").replace("\u2014", "-").replace("\u2019", "'").replace("\u00a3", "$").replace("\u200b", "").replace("\u00d7", "x")
 
 
 def parseMaster(htmlFile:str, path:str = "data.pkl") -> None:
@@ -83,7 +83,7 @@ def parsePokemon(pokemon:str, verbose:bool = False, force:bool = False) -> None:
 	htmlFile = f"html/pokemon/{pokemon}/{pokemon}.html"
 	path =  f"pkl/pokemon/{pokemon}/{pokemon}.pkl"
 	
-	if(_pathExist(path) or not force):
+	if(_pathExist(path) and not force):
 		return
 	
 	if(verbose):
@@ -325,7 +325,7 @@ def parseMoves(move:str, verbose:bool = False, force:bool = False) -> None:
 	htmlFile = f"html/moves/{move}/{move}.html"
 	path =  f"pkl/moves/{move}/{move}.pkl"
 	
-	if(_pathExist(path) or not force):
+	if(_pathExist(path) and not force):
 		return
 	
 	if(verbose):
@@ -427,7 +427,7 @@ def parseAbilities(ability:str, verbose:bool = False, force:bool = False) -> Non
 	htmlFile = f"html/abilities/{ability}/{ability}.html"
 	path =  f"pkl/abilities/{ability}/{ability}.pkl"
 	
-	if(_pathExist(path) or not force):
+	if(_pathExist(path) and not force):
 		return
 	
 	if(verbose):
@@ -452,14 +452,18 @@ def parseAbilities(ability:str, verbose:bool = False, force:bool = False) -> Non
 			tempEffect += _formatText(subset.text) + " "
 			subset = subset.next_sibling
 		tempEffect = tempEffect.strip()
-		if(len(tempEffect) > 400):
-			with open("temperrors.txt", "a") as f:
-				f.write(f"Ability.Effect: {ability}\n")
+		# if(len(tempEffect) > 800):
+		# 	with open("temperrors.txt", "a") as f:
+		# 		f.write(f"Ability.Effect: {ability} {len(tempEffect)}\n")
 		data["effect"] = tempEffect
 	except:
+		with open("errors.txt", "a") as f:
+			f.write(f"Abilities.Effect: {ability}\n")
+		
 		subset = html.findAll(text="Effect")[0].find_next("p")
 		tempEffect = str(subset).replace("<p>", "")
 		tempEffect = tempEffect[:tempEffect.find("<")]
+		tempEffect = _formatText(tempEffect)
 		data["effect"] = tempEffect
 	
 	
@@ -481,7 +485,7 @@ def parseItems(item:str, verbose:bool = False, force:bool = False) -> None:
 	htmlFile = f"html/items/{item}/{item}.html"
 	path =  f"pkl/items/{item}/{item}.pkl"
 	
-	if(_pathExist(path) or not force):
+	if(_pathExist(path) and not force):
 		return
 	
 	if(verbose):
@@ -524,7 +528,7 @@ def parseKeyItems(keyitem:str, verbose:bool = False, force:bool = False) -> None
 	htmlFile = f"html/keyitems/{keyitem}/{keyitem}.html"
 	path =  f"pkl/keyitems/{keyitem}/{keyitem}.pkl"
 	
-	if(_pathExist(path) or not force):
+	if(_pathExist(path) and not force):
 		return
 	
 	if(verbose):

@@ -9,29 +9,31 @@ import ParseData
 import FormatData
 
 
+
+
+
+data = json.load(open("pokemondb.json", "r"))
+
+ab = data["abilities"]
+
+for i in ab:
+	if(i["name"].lower() == "wonder guard"):
+		print(i["effect"])
+
+exit()
+
+
+
+
+
+
+
+
 if(os.path.exists("errors.txt")):
 	os.remove("errors.txt")
 
 
 baseURL = "https://pokemondb.net"
-
-
-
-
-
-
-
-# data = json.load(open("pokemondb.json", "r"))
-
-# ab = data["abilities"]
-
-# print(json.dumps(ab[0], indent=4))
-
-# exit()
-
-
-
-
 
 
 
