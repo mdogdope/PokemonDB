@@ -1,25 +1,31 @@
 import pickle
 import os
+import json
+import time
+import datetime
 
 import GetHTML
 import ParseData
 import FormatData
 
+
+if(os.path.exists("errors.txt")):
+	os.remove("errors.txt")
+
+
 baseURL = "https://pokemondb.net"
 
 
 
-# import requests
-# img = requests.get("https://img.pokemondb.net/artwork/bulbasaur.jpg")
-
-# with open("test.jpg", "wb") as f:
-# 	f.write(img.content)
 
 
-# test = [f for f in os.listdir("html") if os.path.isdir(f"html/{f}")]
-# print(test)
 
-# print(chr(8242), chr(0x2032))
+
+# data = json.load(open("pokemondb.json", "r"))
+
+# ab = data["abilities"]
+
+# print(json.dumps(ab[0], indent=4))
 
 # exit()
 
@@ -29,6 +35,9 @@ baseURL = "https://pokemondb.net"
 
 
 
+timeStart = time.time()
+
+
 
 # ## Get urls and pages.
 # categories = [("pokemon", "https://pokemondb.net/pokedex/all"),
@@ -36,6 +45,7 @@ baseURL = "https://pokemondb.net"
 # 		  ("abilities", "https://pokemondb.net/ability"),
 # 		  ("items", "https://pokemondb.net/item/all"),
 # 		  ("keyItems", "https://pokemondb.net/item/type/key")]
+
 # for category, url in categories:
 # 	# Get master list
 # 	masterListName = f"masterList{category[0].upper() + category[1:]}"
@@ -70,23 +80,122 @@ baseURL = "https://pokemondb.net"
 
 
 
-# ## Parse Pokemon data.
-# pokemonDirs = [f for f in os.listdir("html/pokemon") if os.path.isdir(f"html/pokemon/{f}")]
-# # pokemonDirs = ["abomasnow", "eevee", "ivysaur", "persian", "zygarde", "jolteon", "bulbasaur", "nincada"] # For testing
-# indexToRun = []
-# for id, dir in enumerate(pokemonDirs):
-# 	if(id in indexToRun) or (len(indexToRun) == 0):
-# 		print(dir)
-# 		ParseData.parsePokemon(dir)
+## Parse Pokemon data.
+pokemonDirs = [f for f in os.listdir("html/pokemon") if os.path.isdir(f"html/pokemon/{f}")]
+# pokemonDirs = ["abomasnow", "eevee", "ivysaur", "persian", "zygarde", "jolteon", "bulbasaur", "nincada"] # For testing
+indexToRun = []
+for id, dir in enumerate(pokemonDirs):
+	if(id in indexToRun) or (len(indexToRun) == 0):
+		ParseData.parsePokemon(dir, verbose=True)
 
+## Combine Pokemon data.
+if(os.path.exists("pkl/pokemon.pkl")):
+	os.remove("pkl/pokemon.pkl")
+FormatData.combinePokemon(pokemonDirs)
 
-# ## Combine Pokemon data.
-# if(os.path.exists("pkl/pokemon.pkl")):
-# 	os.remove("pkl/pokemon.pkl")
-# FormatData.CombinePokemon(pokemonDirs)
 
 
 
 
 
 ## Parse Move data.
+moveDirs = [f for f in os.listdir("html/moves") if os.path.isdir(f"html/moves/{f}")]
+# moveDirs = ["air-slash", "crunch", "fly", "blazing-torque", "max-airstream"] # For testing
+indexToRun = []
+for id, dir in enumerate(moveDirs):
+	if(id in indexToRun) or (len(indexToRun) == 0):
+		ParseData.parseMoves(dir, verbose=True)
+
+## Combine Move data.
+if(os.path.exists("pkl/moves.pkl")):
+	os.remove("pkl/moves.pkl")
+FormatData.combineMoves(moveDirs)
+
+
+
+
+
+
+
+
+## Parse Ability data.
+abilityDirs = [f for f in os.listdir("html/abilities") if os.path.isdir(f"html/abilities/{f}")]
+# abilityDirs = ["as-one", "adaptability", "fluffy", "hustle"] # For testing
+indexToRun = []
+for id, dir in enumerate(abilityDirs):
+	if(id in indexToRun) or (len(indexToRun) == 0):
+		ParseData.parseAbilities(dir, verbose=True)
+
+## Combine Ability data.
+if(os.path.exists("pkl/abilities.pkl")):
+	os.remove("pkl/abilities.pkl")
+FormatData.combineAbilities(abilityDirs)
+
+
+exit()
+
+
+
+
+
+## Parse Item data.
+itemDirs = [f for f in os.listdir("html/items") if os.path.isdir(f"html/items/{f}")]
+# itemDirs = ["ability-capsule", "big-root", "bottle-cap"] # For testing
+indexToRun = []
+for id, dir in enumerate(itemDirs):
+	if(id in indexToRun) or (len(indexToRun) == 0):
+		ParseData.parseItems(dir, verbose=True)
+
+## Combine Item data.
+if(os.path.exists("pkl/items.pkl")):
+	os.remove("pkl/items.pkl")
+FormatData.combineItems(itemDirs)
+
+
+
+
+
+
+
+
+## Parse Key Item data.
+itemDirs = [f for f in os.listdir("html/keyitems") if os.path.isdir(f"html/keyitems/{f}")]
+# itemDirs = ["acro-bike", "camping-gear", "data-card-12"] # For testing
+indexToRun = []
+for id, dir in enumerate(itemDirs):
+	if(id in indexToRun) or (len(indexToRun) == 0):
+		ParseData.parseKeyItems(dir, verbose=True)
+
+## Combine Key Item data.
+if(os.path.exists("pkl/keyitems.pkl")):
+	os.remove("pkl/keyitems.pkl")
+FormatData.combineKeyItems(itemDirs)
+
+
+
+
+
+
+## Combine all data.
+dataDirs = ["abilities", "items", "keyitems", "moves", "pokemon"]
+if(os.path.exists("pkl/AllData.pkl")):
+	os.remove("pkl/AllData.pkl")
+FormatData.combineAllData(dataDirs)
+
+
+
+
+
+
+## Write to json file
+data = pickle.load(open("pkl/AllData.pkl", "rb"))
+with open("pokemondb.json", "w") as f:
+	json.dump(data, f, indent=4)
+
+
+
+
+
+timeEnd = time.time()
+dt = datetime.timedelta(seconds=abs(timeEnd - timeStart))
+print(f"This took: {dt}")
